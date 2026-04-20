@@ -2,7 +2,7 @@
 
 Minimal training page for the **Thornvyr the Wise** pillar mechanic (Eternal Hero).
 
-**Play:** https://kolbasovserj-png.github.io/thornvyr-simulator/
+**Play:** https://serj-tankian-game.github.io/thornvyr-simulator/
 
 ## How it works
 

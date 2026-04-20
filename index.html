@@ -91,55 +91,58 @@
   /* Pillar */
   .pillar {
     position: absolute; left: 50%; top: 50%;
-    width: 92px; height: 92px;
+    width: 110px; height: 110px;
     transform: translate(-50%, -50%);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s;
+    transition: transform 0.2s, filter 0.3s;
   }
   .pillar:active { transform: translate(-50%, -50%) scale(0.92); }
   .pillar-glow {
-    position: absolute; inset: -6px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(180,240,130,0.55) 0%, rgba(90,200,100,0.3) 55%, transparent 70%);
-    filter: blur(3px);
-    animation: glow-pulse 1.6s ease-in-out infinite;
+    position: absolute; inset: -8px; border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(120,255,140,0.38) 0%, rgba(80,200,100,0.22) 45%, rgba(60,160,80,0.0) 68%);
+    filter: blur(4px);
+    animation: glow-pulse 1.8s ease-in-out infinite;
+    pointer-events: none;
   }
   @keyframes glow-pulse {
-    0%,100% { opacity: 0.85; }
-    50%     { opacity: 1; }
-  }
-  .pillar-disc {
-    position: absolute; inset: 0; border-radius: 50%;
-    background:
-      radial-gradient(circle at 35% 30%, #e6f5a9 0%, #9ed265 40%, #4c8a3f 80%, #2a5b2d 100%);
-    box-shadow: inset 0 0 10px rgba(20,60,20,0.6), 0 2px 8px rgba(0,0,0,0.35);
+    0%,100% { opacity: 0.85; transform: scale(1); }
+    50%     { opacity: 1; transform: scale(1.04); }
   }
   .pillar-thorns {
-    position: absolute; inset: -4px; pointer-events: none;
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(60,180,90,0.6));
   }
-  .pillar-thorns svg { width: 100%; height: 100%; opacity: 0.85; }
   .medallion {
-    position: relative; width: 56%; height: 56%; border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #1c5755 0%, #0c3633 60%, #062623 100%);
+    position: relative; width: 72%; height: 72%; border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, #2a7b72 0%, #0f3f3b 45%, #082a26 85%);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5);
+    box-shadow:
+      inset 0 0 8px rgba(0,0,0,0.7),
+      inset 0 2px 3px rgba(255,255,255,0.12),
+      0 2px 4px rgba(0,0,0,0.5);
   }
-  .medallion svg { width: 68%; height: 68%; overflow: visible; }
+  .medallion svg.icon { width: 86%; height: 86%; overflow: visible; display: block; }
   .medallion .border-ring {
-    position: absolute; inset: 8%; border-radius: 50%;
-    border: 2.5px solid #3ec7b3;
-    box-shadow: 0 0 4px rgba(62,199,179,0.4);
+    position: absolute; inset: 6%; border-radius: 50%;
+    border: 2.5px solid #4cd9c3;
+    box-shadow: 0 0 5px rgba(76,217,195,0.5), inset 0 0 3px rgba(76,217,195,0.3);
+    pointer-events: none;
   }
 
-  .pillar.correct .pillar-disc { animation: flash-green 0.5s ease; }
-  .pillar.wrong   .pillar-disc { animation: flash-red   0.5s ease; }
+  .pillar.correct .medallion { animation: flash-green 0.5s ease; }
+  .pillar.wrong   .medallion { animation: flash-red   0.5s ease; }
   @keyframes flash-green {
-    0% { box-shadow: inset 0 0 10px rgba(20,60,20,0.6), 0 0 30px rgba(80,255,100,0.9); }
-    100% { box-shadow: inset 0 0 10px rgba(20,60,20,0.6); }
+    0% { box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 0 40px rgba(80,255,100,1); }
+    100% { box-shadow: inset 0 0 8px rgba(0,0,0,0.7); }
   }
   @keyframes flash-red {
-    0% { box-shadow: inset 0 0 10px rgba(60,20,20,0.6), 0 0 30px rgba(255,80,60,0.9); }
-    100% { box-shadow: inset 0 0 10px rgba(60,20,20,0.6); }
+    0% { box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 0 40px rgba(255,80,60,1); }
+    100% { box-shadow: inset 0 0 8px rgba(0,0,0,0.7); }
   }
 
   /* Mode switch */
@@ -210,7 +213,7 @@
   .end-actions .mode-btn { width: 72px; height: 72px; font-size: 28px; }
 
   @media (max-width: 380px) {
-    .pillar { width: 76px; height: 76px; }
+    .pillar { width: 92px; height: 92px; }
     .cast-bar { width: 180px; }
     .boss-core { width: 58px; height: 58px; }
   }
@@ -223,7 +226,8 @@
     <span class="stat" title="Streak">⭐ <b id="streak">0</b></span>
     <span class="stat" title="Correct">✓ <b id="ok">0</b></span>
     <span class="stat" title="Wrong">✗ <b id="fail">0</b></span>
-    <span class="stat" title="Best">🏆 <b id="best">0</b></span>
+    <span class="stat" title="Avg reaction">⏱ <b id="avg">—</b></span>
+    <span class="stat" title="Best streak">🏆 <b id="best">0</b></span>
     <span class="spacer"></span>
     <button class="icon-btn" id="resetBtn" title="Reset">↻</button>
   </header>
@@ -261,7 +265,8 @@
     <div class="end-stats">
       <div class="end-stat"><small>⭐</small><span id="endStreak">0</span></div>
       <div class="end-stat"><small>✓</small><span id="endOk">0</span></div>
-      <div class="end-stat"><small>⏱</small><span id="endBest">0.00s</span></div>
+      <div class="end-stat"><small>⏱ avg</small><span id="endAvg">—</span></div>
+      <div class="end-stat"><small>🏆</small><span id="endBest">0</span></div>
     </div>
     <div class="end-actions">
       <button class="mode-btn" data-retry="1">1</button>
@@ -271,31 +276,49 @@
 
 </div>
 
-<!-- SVG symbols: leaf + clover -->
+<!-- SVG symbols: icons + thorn ring -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <!-- Leaf: almond-shaped with central vein -->
     <symbol id="sym-leaf" viewBox="0 0 100 100">
-      <path d="M50 8
-               C 22 14, 12 44, 22 72
-               C 30 90, 45 94, 50 94
-               C 55 94, 70 90, 78 72
-               C 88 44, 78 14, 50 8 Z" />
-      <path d="M50 14 L 50 90" stroke-width="4" stroke-linecap="round" fill="none" class="vein"/>
+      <path d="M50 6
+               C 20 14, 10 44, 22 74
+               C 30 92, 46 96, 50 96
+               C 54 96, 70 92, 78 74
+               C 90 44, 80 14, 50 6 Z" />
     </symbol>
+    <!-- Clover: four-lobed -->
     <symbol id="sym-clover" viewBox="0 0 100 100">
-      <!-- 4 lobes forming a clover -->
       <path d="M50 50
-               C 50 28, 30 18, 22 30
-               C 14 42, 28 56, 50 50 Z" />
+               C 50 24, 28 12, 18 24
+               C 8 38, 26 58, 50 50 Z" />
       <path d="M50 50
-               C 72 50, 82 30, 70 22
-               C 58 14, 44 28, 50 50 Z" />
+               C 76 50, 88 28, 76 18
+               C 62 8, 42 26, 50 50 Z" />
       <path d="M50 50
-               C 50 72, 70 82, 78 70
-               C 86 58, 72 44, 50 50 Z" />
+               C 50 76, 72 88, 82 76
+               C 92 62, 74 42, 50 50 Z" />
       <path d="M50 50
-               C 28 50, 18 70, 30 78
-               C 42 86, 56 72, 50 50 Z" />
+               C 24 50, 12 72, 24 82
+               C 38 92, 58 74, 50 50 Z" />
+    </symbol>
+    <!-- Thorn ring: 4 jagged briar branches around the medallion -->
+    <symbol id="sym-thorns" viewBox="0 0 100 100">
+      <g fill="#2d5a2d" stroke="#4e9357" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+        <!-- Top -->
+        <path d="M50 4 L 43 14 L 49 18 L 42 22 L 50 28 L 58 22 L 51 18 L 57 14 Z" />
+        <!-- Right -->
+        <path d="M96 50 L 86 43 L 82 49 L 78 42 L 72 50 L 78 58 L 82 51 L 86 57 Z" />
+        <!-- Bottom -->
+        <path d="M50 96 L 57 86 L 51 82 L 58 78 L 50 72 L 42 78 L 49 82 L 43 86 Z" />
+        <!-- Left -->
+        <path d="M4 50 L 14 57 L 18 51 L 22 58 L 28 50 L 22 42 L 18 49 L 14 43 Z" />
+        <!-- Diagonal thorns (smaller) -->
+        <path d="M18 18 L 26 22 L 24 28 L 30 30 L 28 22 L 22 26 Z" />
+        <path d="M82 18 L 74 22 L 76 28 L 70 30 L 72 22 L 78 26 Z" />
+        <path d="M18 82 L 22 74 L 28 76 L 30 70 L 22 72 L 26 78 Z" />
+        <path d="M82 82 L 78 74 L 72 76 L 70 70 L 78 72 L 74 78 Z" />
+      </g>
     </symbol>
   </defs>
 </svg>
@@ -320,6 +343,7 @@ const state = {
   ok: 0,
   fail: 0,
   best: 0, // streak record per current session phase
+  reactionTimes: [], // ms for correct answers
   roundStart: 0,
   castDuration: 0,
   roundActive: false,
@@ -408,14 +432,16 @@ function renderPillars() {
 
     el.innerHTML = `
       <div class="pillar-glow"></div>
-      <div class="pillar-disc"></div>
+      <svg class="pillar-thorns" viewBox="0 0 100 100" aria-hidden="true">
+        <use href="#sym-thorns"/>
+      </svg>
       <div class="medallion">
         ${p.border ? '<div class="border-ring"></div>' : ""}
-        <svg viewBox="0 0 100 100" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 100 100" aria-hidden="true">
           <use href="#sym-${p.shape}"
                style="fill:${fill}; stroke:${stroke}; stroke-width:${strokeW}; stroke-linejoin:round;"/>
           ${p.shape === "leaf"
-            ? `<path d="M50 14 L 50 90" stroke="${veinColor}" stroke-width="3" stroke-linecap="round" fill="none"/>`
+            ? `<path d="M50 10 L 50 94" stroke="${veinColor}" stroke-width="3.5" stroke-linecap="round" fill="none"/>`
             : ""}
         </svg>
       </div>
@@ -483,6 +509,7 @@ function onPillarClick(idx) {
     el.classList.add("correct");
     state.ok += 1;
     state.streak += 1;
+    state.reactionTimes.push(elapsed);
     if (state.streak > state.best) {
       state.best = state.streak;
       saveBest();
@@ -515,16 +542,29 @@ function onTimeout() {
 }
 
 // ---------- HUD + overlays ----------
+function avgReactionSec() {
+  if (state.reactionTimes.length === 0) return null;
+  const sum = state.reactionTimes.reduce((a, b) => a + b, 0);
+  return sum / state.reactionTimes.length / 1000;
+}
+
+function formatReaction(seconds) {
+  if (seconds === null || isNaN(seconds)) return "—";
+  return seconds.toFixed(2) + "s";
+}
+
 function updateHUD() {
   $("streak").textContent = state.streak;
   $("ok").textContent = state.ok;
   $("fail").textContent = state.fail;
   $("best").textContent = state.best;
+  $("avg").textContent = formatReaction(avgReactionSec());
 }
 
 function showEnd() {
   $("endStreak").textContent = state.streak;
   $("endOk").textContent = state.ok;
+  $("endAvg").textContent = formatReaction(avgReactionSec());
   $("endBest").textContent = state.best;
   $("endOverlay").classList.add("visible");
 }
@@ -545,6 +585,7 @@ function setPhase(phase) {
   state.streak = 0;
   state.ok = 0;
   state.fail = 0;
+  state.reactionTimes = [];
   state.best = loadBest(phase);
   updateHUD();
   // Update mode buttons
