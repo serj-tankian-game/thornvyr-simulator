@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c96e2e">
+<title>Thornvyr</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; width: 100%; overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    user-select: none; -webkit-user-select: none;
+    background: radial-gradient(ellipse at top, #e8a668 0%, #c96e2e 60%, #8a4420 100%);
+    color: #fff;
+    touch-action: manipulation;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(2px 2px at 10% 20%, rgba(255,220,180,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 80% 30%, rgba(255,200,150,0.3), transparent),
+      radial-gradient(2px 3px at 30% 70%, rgba(200,100,50,0.4), transparent),
+      radial-gradient(2px 2px at 70% 85%, rgba(255,220,180,0.25), transparent),
+      radial-gradient(1px 2px at 50% 10%, rgba(255,200,150,0.3), transparent);
+    background-size: 100% 100%;
+  }
+  .app {
+    position: relative; display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh; max-width: 560px; margin: 0 auto;
+  }
+
+  /* HUD */
+  .hud {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; font-size: 15px; font-weight: 600;
+    background: rgba(0,0,0,0.35); backdrop-filter: blur(6px);
+  }
+  .hud .stat { display: inline-flex; align-items: center; gap: 4px; }
+  .hud .stat b { font-variant-numeric: tabular-nums; }
+  .hud .spacer { flex: 1; }
+  .hud .icon-btn {
+    width: 34px; height: 34px; border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.15); color: #fff; font-size: 18px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .hud .icon-btn:hover { background: rgba(255,255,255,0.25); }
+  .hud .icon-btn:active { transform: scale(0.9); }
+
+  /* Arena */
+  .arena-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
+  .arena {
+    position: relative; width: min(92vmin, 500px); aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Center */
+  .center {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    z-index: 2; pointer-events: none;
+  }
+  .boss-core {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff2d4 0%, #f6a85b 35%, #a83c1a 100%);
+    box-shadow: 0 0 30px rgba(255,150,80,0.6), inset 0 0 18px rgba(140,40,10,0.4);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); filter: brightness(1); }
+    50%     { transform: scale(1.06); filter: brightness(1.1); }
+  }
+  .cast-bar {
+    position: relative; width: 220px; max-width: 60vw; height: 18px;
+    background: rgba(0,0,0,0.55); border-radius: 9px; overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .cast-bar.active { opacity: 1; }
+  .cast-fill {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: linear-gradient(90deg, #34d0b0, #1a9d8e);
+    width: 0%; transition: width linear 0s;
+    border-radius: 9px;
+  }
+  .cast-fill.warn { background: linear-gradient(90deg, #f7d65a, #dd9b2e); }
+  .cast-fill.danger { background: linear-gradient(90deg, #ff8a5b, #e0452a); }
+
+  /* Pillar */
+  .pillar {
+    position: absolute; left: 50%; top: 50%;
+    width: 92px; height: 92px;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+  }
+  .pillar:active { transform: translate(-50%, -50%) scale(0.92); }
+  .pillar-glow {
+    position: absolute; inset: -6px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(180,240,130,0.55) 0%, rgba(90,200,100,0.3) 55%, transparent 70%);
+    filter: blur(3px);
+    animation: glow-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes glow-pulse {
+    0%,100% { opacity: 0.85; }
+    50%     { opacity: 1; }
+  }
+  .pillar-disc {
+    position: absolute; inset: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #e6f5a9 0%, #9ed265 40%, #4c8a3f 80%, #2a5b2d 100%);
+    box-shadow: inset 0 0 10px rgba(20,60,20,0.6), 0 2px 8px rgba(0,0,0,0.35);
+  }
+  .pillar-thorns {
+    position: absolute; inset: -4px; pointer-events: none;
+  }
+  .pillar-thorns svg { width: 100%; height: 100%; opacity: 0.85; }
+  .medallion {
+    position: relative; width: 56%; height: 56%; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #1c5755 0%, #0c3633 60%, #062623 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .medallion svg { width: 68%; height: 68%; overflow: visible; }
+  .medallion .border-ring {
+    position: absolute; inset: 8%; border-radius: 50%;
+    border: 2.5px solid #3ec7b3;
+    box-shadow: 0 0 4px rgba(62,199,179,0.4);
+  }
+
+  .pillar.correct .pillar-disc { animation: flash-green 0.5s ease; }
+  .pillar.wrong   .pillar-disc { animation: flash-red   0.5s ease; }
+  @keyframes flash-green {
+    0% { box-shadow: inset 0 0 10px rgba(20,60,20,0.6), 0 0 30px rgba(80,255,100,0.9); }
+    100% { box-shadow: inset 0 0 10px rgba(20,60,20,0.6); }
+  }
+  @keyframes flash-red {
+    0% { box-shadow: inset 0 0 10px rgba(60,20,20,0.6), 0 0 30px rgba(255,80,60,0.9); }
+    100% { box-shadow: inset 0 0 10px rgba(60,20,20,0.6); }
+  }
+
+  /* Mode switch */
+  .modes {
+    display: flex; gap: 12px; justify-content: center;
+    padding: 14px 16px 22px;
+  }
+  .mode-btn {
+    width: 56px; height: 56px; border-radius: 18px;
+    border: 2px solid rgba(255,255,255,0.5);
+    background: rgba(0,0,0,0.35); color: #fff;
+    font-size: 22px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .mode-btn.active {
+    background: linear-gradient(180deg, #4ad3b6, #1a9d8e);
+    border-color: #6ef0d4;
+    box-shadow: 0 0 12px rgba(74,211,182,0.6);
+  }
+  .mode-btn:active { transform: scale(0.94); }
+
+  /* Start overlay */
+  .start-overlay {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 28px;
+    background: rgba(10,20,15,0.82);
+    backdrop-filter: blur(4px);
+    transition: opacity 0.3s;
+  }
+  .start-overlay.hidden { opacity: 0; pointer-events: none; }
+  .start-title {
+    font-size: 14px; font-weight: 500; letter-spacing: 3px; opacity: 0.8;
+    text-transform: uppercase;
+  }
+  .start-boss {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff2d4 0%, #f6a85b 35%, #a83c1a 100%);
+    box-shadow: 0 0 40px rgba(255,150,80,0.6), inset 0 0 20px rgba(140,40,10,0.4);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .start-choice { display: flex; gap: 20px; }
+  .start-choice .mode-btn { width: 90px; height: 90px; font-size: 36px; border-radius: 24px; }
+
+  .hint {
+    text-align: center; font-size: 12px; opacity: 0.6; margin-top: 4px;
+    max-width: 260px; line-height: 1.4;
+  }
+  .hint b { font-weight: 700; }
+
+  /* End overlay */
+  .end-overlay {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px;
+    background: rgba(10,20,15,0.85);
+    backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .end-overlay.visible { opacity: 1; pointer-events: auto; }
+  .end-icon { font-size: 64px; }
+  .end-stats { display: flex; gap: 24px; font-size: 18px; font-weight: 600; }
+  .end-stat { text-align: center; }
+  .end-stat small { display: block; font-size: 11px; opacity: 0.7; margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase; }
+  .end-actions { display: flex; gap: 14px; }
+  .end-actions .mode-btn { width: 72px; height: 72px; font-size: 28px; }
+
+  @media (max-width: 380px) {
+    .pillar { width: 76px; height: 76px; }
+    .cast-bar { width: 180px; }
+    .boss-core { width: 58px; height: 58px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="hud">
+    <span class="stat" title="Streak">⭐ <b id="streak">0</b></span>
+    <span class="stat" title="Correct">✓ <b id="ok">0</b></span>
+    <span class="stat" title="Wrong">✗ <b id="fail">0</b></span>
+    <span class="stat" title="Best">🏆 <b id="best">0</b></span>
+    <span class="spacer"></span>
+    <button class="icon-btn" id="resetBtn" title="Reset">↻</button>
+  </header>
+
+  <div class="arena-wrap">
+    <div class="arena" id="arena">
+      <div class="center">
+        <div class="boss-core"></div>
+        <div class="cast-bar" id="castBar"><div class="cast-fill" id="castFill"></div></div>
+      </div>
+      <!-- pillars injected by JS -->
+    </div>
+  </div>
+
+  <footer class="modes">
+    <button class="mode-btn" data-mode="1">1</button>
+    <button class="mode-btn" data-mode="2">2</button>
+  </footer>
+
+  <div class="start-overlay" id="startOverlay">
+    <div class="start-title">Thornvyr</div>
+    <div class="start-boss"></div>
+    <div class="start-choice">
+      <button class="mode-btn" data-start="1">1</button>
+      <button class="mode-btn" data-start="2">2</button>
+    </div>
+    <div class="hint">
+      <span style="font-size:24px;">🥬 🍀</span><br>
+      <b>1</b> → 4 &nbsp;·&nbsp; <b>2</b> → 5
+    </div>
+  </div>
+
+  <div class="end-overlay" id="endOverlay">
+    <div class="end-icon" id="endIcon">💀</div>
+    <div class="end-stats">
+      <div class="end-stat"><small>⭐</small><span id="endStreak">0</span></div>
+      <div class="end-stat"><small>✓</small><span id="endOk">0</span></div>
+      <div class="end-stat"><small>⏱</small><span id="endBest">0.00s</span></div>
+    </div>
+    <div class="end-actions">
+      <button class="mode-btn" data-retry="1">1</button>
+      <button class="mode-btn" data-retry="2">2</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SVG symbols: leaf + clover -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="sym-leaf" viewBox="0 0 100 100">
+      <path d="M50 8
+               C 22 14, 12 44, 22 72
+               C 30 90, 45 94, 50 94
+               C 55 94, 70 90, 78 72
+               C 88 44, 78 14, 50 8 Z" />
+      <path d="M50 14 L 50 90" stroke-width="4" stroke-linecap="round" fill="none" class="vein"/>
+    </symbol>
+    <symbol id="sym-clover" viewBox="0 0 100 100">
+      <!-- 4 lobes forming a clover -->
+      <path d="M50 50
+               C 50 28, 30 18, 22 30
+               C 14 42, 28 56, 50 50 Z" />
+      <path d="M50 50
+               C 72 50, 82 30, 70 22
+               C 58 14, 44 28, 50 50 Z" />
+      <path d="M50 50
+               C 50 72, 70 82, 78 70
+               C 86 58, 72 44, 50 50 Z" />
+      <path d="M50 50
+               C 28 50, 18 70, 30 78
+               C 42 86, 56 72, 50 50 Z" />
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+"use strict";
+
+const SHAPES = ["leaf", "clover"];
+const COLORS = ["empty", "filled"];
+const BORDERS = [false, true];
+
+const PHASE_CONFIG = {
+  1: { count: 4, duration: 3000 },
+  2: { count: 5, duration: 2500 }
+};
+
+const state = {
+  phase: null,
+  pillars: [],
+  uniqueIndex: -1,
+  streak: 0,
+  ok: 0,
+  fail: 0,
+  best: 0, // streak record per current session phase
+  roundStart: 0,
+  castDuration: 0,
+  roundActive: false,
+  rafId: null,
+  pending: null
+};
+
+// ---------- Utils ----------
+const $ = (id) => document.getElementById(id);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const other = (v, arr) => arr.find(x => x !== v);
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ---------- Generation ----------
+function generatePillars(count) {
+  const uniqueAxis = pick(["shape", "color", "border"]);
+  const majority = {
+    shape: pick(SHAPES),
+    color: pick(COLORS),
+    border: pick(BORDERS)
+  };
+  const uniquePillar = {
+    shape: uniqueAxis === "shape" ? other(majority.shape, SHAPES) : majority.shape,
+    color: uniqueAxis === "color" ? other(majority.color, COLORS) : majority.color,
+    border: uniqueAxis === "border" ? !majority.border : majority.border,
+    unique: true
+  };
+  const pillars = [uniquePillar];
+  for (let i = 0; i < count - 1; i++) {
+    pillars.push({ ...majority, unique: false });
+  }
+  shuffle(pillars);
+  const uniqueIndex = pillars.findIndex(p => p.unique);
+  return { pillars, uniqueIndex };
+}
+
+function validateRound(pillars) {
+  // Verify: exactly one axis has a single "unique" pillar
+  const axes = ["shape", "color", "border"];
+  const uniqueAxes = [];
+  for (const axis of axes) {
+    const counts = {};
+    for (const p of pillars) {
+      const k = String(p[axis]);
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    const values = Object.values(counts);
+    if (values.length === 2 && (values[0] === 1 || values[1] === 1)) {
+      uniqueAxes.push(axis);
+    }
+  }
+  return uniqueAxes.length === 1;
+}
+
+// ---------- Rendering ----------
+function renderPillars() {
+  const arena = $("arena");
+  // Remove existing
+  arena.querySelectorAll(".pillar").forEach(el => el.remove());
+
+  const n = state.pillars.length;
+  const radiusPct = 37; // % of arena — 37% from center
+  for (let i = 0; i < n; i++) {
+    const p = state.pillars[i];
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    const x = 50 + radiusPct * Math.cos(angle);
+    const y = 50 + radiusPct * Math.sin(angle);
+
+    const el = document.createElement("div");
+    el.className = "pillar";
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    el.dataset.index = i;
+
+    const fill = p.color === "filled" ? "#f5f5f0" : "transparent";
+    const stroke = "#3ec7b3";
+    const strokeW = p.color === "filled" ? 2 : 3.5;
+    const veinColor = p.color === "filled" ? "#1a6b60" : "#3ec7b3";
+
+    el.innerHTML = `
+      <div class="pillar-glow"></div>
+      <div class="pillar-disc"></div>
+      <div class="medallion">
+        ${p.border ? '<div class="border-ring"></div>' : ""}
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <use href="#sym-${p.shape}"
+               style="fill:${fill}; stroke:${stroke}; stroke-width:${strokeW}; stroke-linejoin:round;"/>
+          ${p.shape === "leaf"
+            ? `<path d="M50 14 L 50 90" stroke="${veinColor}" stroke-width="3" stroke-linecap="round" fill="none"/>`
+            : ""}
+        </svg>
+      </div>
+    `;
+    el.addEventListener("click", () => onPillarClick(i));
+    arena.appendChild(el);
+  }
+}
+
+// ---------- Game loop ----------
+function startRound() {
+  const cfg = PHASE_CONFIG[state.phase];
+  const round = generatePillars(cfg.count);
+  state.pillars = round.pillars;
+  state.uniqueIndex = round.uniqueIndex;
+  state.castDuration = cfg.duration;
+  state.roundStart = performance.now();
+  state.roundActive = true;
+
+  renderPillars();
+  const bar = $("castBar");
+  const fill = $("castFill");
+  bar.classList.add("active");
+  fill.classList.remove("warn", "danger");
+  fill.style.transition = "none";
+  fill.style.width = "100%";
+  // Kick off the shrink animation next frame
+  requestAnimationFrame(() => {
+    fill.style.transition = `width ${cfg.duration}ms linear`;
+    fill.style.width = "0%";
+  });
+
+  cancelAnimationFrame(state.rafId);
+  tick();
+}
+
+function tick() {
+  if (!state.roundActive) return;
+  const elapsed = performance.now() - state.roundStart;
+  const remaining = state.castDuration - elapsed;
+  const fill = $("castFill");
+  if (remaining < state.castDuration * 0.33 && !fill.classList.contains("warn")) {
+    fill.classList.add("warn");
+  }
+  if (remaining < state.castDuration * 0.15 && !fill.classList.contains("danger")) {
+    fill.classList.add("danger");
+  }
+  if (remaining <= 0) {
+    // Timeout = miss
+    onTimeout();
+    return;
+  }
+  state.rafId = requestAnimationFrame(tick);
+}
+
+function onPillarClick(idx) {
+  if (!state.roundActive) return;
+  const pillar = state.pillars[idx];
+  const el = document.querySelectorAll(".pillar")[idx];
+  state.roundActive = false;
+  cancelAnimationFrame(state.rafId);
+  const elapsed = performance.now() - state.roundStart;
+
+  if (pillar.unique) {
+    el.classList.add("correct");
+    state.ok += 1;
+    state.streak += 1;
+    if (state.streak > state.best) {
+      state.best = state.streak;
+      saveBest();
+    }
+    updateHUD();
+    $("castBar").classList.remove("active");
+    setTimeout(() => startRound(), 480);
+  } else {
+    el.classList.add("wrong");
+    // Also highlight correct one briefly
+    const correctEl = document.querySelectorAll(".pillar")[state.uniqueIndex];
+    if (correctEl) correctEl.classList.add("correct");
+    state.fail += 1;
+    updateHUD();
+    $("castBar").classList.remove("active");
+    showEnd();
+  }
+}
+
+function onTimeout() {
+  state.roundActive = false;
+  cancelAnimationFrame(state.rafId);
+  // Highlight correct
+  const correctEl = document.querySelectorAll(".pillar")[state.uniqueIndex];
+  if (correctEl) correctEl.classList.add("wrong");
+  state.fail += 1;
+  updateHUD();
+  $("castBar").classList.remove("active");
+  showEnd();
+}
+
+// ---------- HUD + overlays ----------
+function updateHUD() {
+  $("streak").textContent = state.streak;
+  $("ok").textContent = state.ok;
+  $("fail").textContent = state.fail;
+  $("best").textContent = state.best;
+}
+
+function showEnd() {
+  $("endStreak").textContent = state.streak;
+  $("endOk").textContent = state.ok;
+  $("endBest").textContent = state.best;
+  $("endOverlay").classList.add("visible");
+}
+
+function hideEnd() {
+  $("endOverlay").classList.remove("visible");
+}
+
+function showStart() {
+  $("startOverlay").classList.remove("hidden");
+}
+function hideStart() {
+  $("startOverlay").classList.add("hidden");
+}
+
+function setPhase(phase) {
+  state.phase = phase;
+  state.streak = 0;
+  state.ok = 0;
+  state.fail = 0;
+  state.best = loadBest(phase);
+  updateHUD();
+  // Update mode buttons
+  document.querySelectorAll(".modes .mode-btn").forEach(btn => {
+    btn.classList.toggle("active", parseInt(btn.dataset.mode, 10) === phase);
+  });
+}
+
+// ---------- Persistence ----------
+function bestKey(phase) { return `thornvyr.best.p${phase}`; }
+function loadBest(phase) {
+  const v = parseInt(localStorage.getItem(bestKey(phase)) || "0", 10);
+  return isNaN(v) ? 0 : v;
+}
+function saveBest() {
+  try { localStorage.setItem(bestKey(state.phase), String(state.best)); } catch(_) {}
+}
+
+// ---------- Controls ----------
+function handleStart(phase) {
+  setPhase(phase);
+  hideStart();
+  hideEnd();
+  startRound();
+}
+function handleReset() {
+  cancelAnimationFrame(state.rafId);
+  state.roundActive = false;
+  $("castBar").classList.remove("active");
+  $("castFill").style.width = "0%";
+  document.querySelectorAll(".pillar").forEach(el => el.remove());
+  hideEnd();
+  showStart();
+}
+
+document.querySelectorAll("[data-start]").forEach(btn => {
+  btn.addEventListener("click", () => handleStart(parseInt(btn.dataset.start, 10)));
+});
+document.querySelectorAll("[data-retry]").forEach(btn => {
+  btn.addEventListener("click", () => handleStart(parseInt(btn.dataset.retry, 10)));
+});
+document.querySelectorAll(".modes .mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const phase = parseInt(btn.dataset.mode, 10);
+    if (phase === state.phase && state.roundActive) return;
+    handleStart(phase);
+  });
+});
+$("resetBtn").addEventListener("click", handleReset);
+
+// Keyboard: 1 / 2 / R
+document.addEventListener("keydown", (e) => {
+  if (e.key === "1") handleStart(1);
+  else if (e.key === "2") handleStart(2);
+  else if (e.key === "r" || e.key === "R") handleReset();
+});
+
+// ---------- Self-test (dev) ----------
+// Run in DevTools: window.selfTest(1000)
+window.selfTest = function(iters = 1000) {
+  let pass = 0, fail = 0;
+  for (let i = 0; i < iters; i++) {
+    const { pillars } = generatePillars(4);
+    if (validateRound(pillars)) pass++; else fail++;
+    const { pillars: p5 } = generatePillars(5);
+    if (validateRound(p5)) pass++; else fail++;
+  }
+  console.log(`selfTest: ${pass} pass, ${fail} fail (of ${iters * 2})`);
+  return { pass, fail };
+};
+</script>
+</body>
+</html>
